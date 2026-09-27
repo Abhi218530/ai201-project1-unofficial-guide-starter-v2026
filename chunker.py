@@ -22,7 +22,15 @@ to it, write down what you saw, and move on. That's a real observation about
 your pipeline, not giving up.
 """
 
+"""
+Stage 2 of the pipeline: splitting documents into chunks.
+
+Replaced in Milestone 3: paragraph-aware chunking instead of fixed-size
+windows. See split_documents for the reasoning.
+"""
+
 from dataclasses import dataclass
+import re
 
 import config
 from ingest import Document
@@ -49,9 +57,7 @@ def fallback_split(
 ) -> list[Chunk]:
     """
     The starter's original chunker. Fixed-size character windows with overlap.
-
-    Keep this function. Milestone 3's stop rule points back at it, and having
-    something to compare your own strategy against is useful in unit 2.
+    Kept for comparison — Milestone 3's stop rule points back at it.
     """
     chunk_size = chunk_size or config.CHUNK_SIZE
     overlap = overlap or config.CHUNK_OVERLAP
@@ -80,24 +86,86 @@ def fallback_split(
     return chunks
 
 
+_SENTENCE_SPLIT = re.compile(r"(?<=[.!?])\s+(?=[A-Z0-9])")
+
+
+def _pack_sentences(text: str, chunk_size: int, overlap: int) -> list[str]:
+    """Only used when a single paragraph is bigger than chunk_size on its own.
+    Packs whole sentences up to chunk_size, carrying trailing sentences
+    forward as overlap so a fact split across the boundary still appears
+    whole somewhere."""
+    sentences = [s.strip() for s in _SENTENCE_SPLIT.split(text) if s.strip()]
+    if not sentences:
+        return [text]
+
+    pieces, current, current_len = [], [], 0
+    for sent in sentences:
+        sent_len = len(sent) + 1
+        if current and current_len + sent_len > chunk_size:
+            pieces.append(" ".join(current))
+            carry, carry_len = [], 0
+            for s in reversed(current):
+                if carry_len + len(s) + 1 > overlap:
+                    break
+                carry.insert(0, s)
+                carry_len += len(s) + 1
+            current, current_len = carry, carry_len
+        current.append(sent)
+        current_len += sent_len
+    if current:
+        pieces.append(" ".join(current))
+    return pieces
+
+
 def split_documents(documents: list[Document]) -> list[Chunk]:
     """
-    Split documents into chunks. ⚠️ REPLACE THE BODY OF THIS IN MILESTONE 3.
-
-    Right now it just calls the fallback. That is the plain, generic behaviour
-    the brief is talking about.
-
-    When you write your own strategy, set `produced_by` to
-    "chunker.py::split_documents" so your README's Sample Chunks section names
-    the right function. `app.py chunks` prints that string for you.
-
-    Things worth thinking about before you write any code:
-      - Are your documents short posts or long guides?
-      - Is the useful information in one sentence, or spread over a paragraph?
-      - Would splitting on paragraph breaks keep more thoughts intact than
-        splitting on a character count?
+    Paragraph-aware chunking, chosen after reading campus_life directly:
+    most posts (e.g. admin_dining_dollars) are short enough that the whole
+    post is one coherent chunk. Longer posts and multi-reply threads
+    (advice_threads) get split at paragraph/reply boundaries, which are
+    already natural units — only a single oversized paragraph falls back
+    to sentence-packing.
     """
-    return fallback_split(documents)
+    chunk_size = config.CHUNK_SIZE
+    overlap = config.CHUNK_OVERLAP
+    chunks: list[Chunk] = []
+
+    for doc in documents:
+        text = doc.text.strip()
+
+        if len(text) <= chunk_size:
+            chunks.append(Chunk(text=text, source=doc.source, index=0,
+                                 produced_by="chunker.py::split_documents"))
+            continue
+
+        paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
+        idx = 0
+        buffer = ""
+
+        def flush():
+            nonlocal buffer, idx
+            if buffer:
+                chunks.append(Chunk(text=buffer, source=doc.source, index=idx,
+                                     produced_by="chunker.py::split_documents"))
+                idx += 1
+                buffer = ""
+
+        for para in paragraphs:
+            candidate = f"{buffer}\n\n{para}".strip() if buffer else para
+            if len(candidate) <= chunk_size:
+                buffer = candidate
+            else:
+                flush()
+                if len(para) <= chunk_size:
+                    buffer = para
+                else:
+                    for piece in _pack_sentences(para, chunk_size, overlap):
+                        chunks.append(Chunk(text=piece, source=doc.source, index=idx,
+                                             produced_by="chunker.py::split_documents"))
+                        idx += 1
+        flush()
+
+    return chunks
 
 
 def describe(chunks: list[Chunk]) -> str:
