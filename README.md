@@ -103,7 +103,7 @@ confirm the same fact rather than one chunk from one canonical source.
      visible. Milestone 4. -->
 **Question:** How much does laundry cost in Fenwick Court?
 
-**Answer:**
+**Answer:** In Fenwick Court, laundry costs $2.00 for a wash and $1.75 for a dry.
 
 ```
 ```
