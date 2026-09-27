@@ -82,13 +82,8 @@ confirm the same fact rather than one chunk from one canonical source.
 ```
 
 **Chunk 2** — source: `course_biol_160.txt#0` — produced by: `chunker.py::split_documents`
-BIOL 160 Cell Biology
-
-I lived here my sophomore year. Format is lecture three times a week with a weekly lab. Assessment: four unit tests and a cumulative final. Not curved.
-
-Expect 9 to 11 hours a week, the heaviest first-year course by reputation.
-
-The one piece of advice: the unit tests come fast, roughly every three weeks; falling behind once is very hard to recover from.
+```
+```
 
 **Chunk 3** — source: `course_hist_118_workload.txt#0` — produced by: `chunker.py::split_documents`
 ```
@@ -100,6 +95,14 @@ The one piece of advice: the unit tests come fast, roughly every three weeks; fa
 
 **Chunk 5** — source: `housing_innisfree_hall.txt#0` — produced by: `chunker.py::split_documents`
 ```
+BIOL 160 Cell Biology
+
+I lived here my sophomore year. Format is lecture three times a week with a weekly lab. Assessment: four unit tests and a cumulative final. Not curved.
+
+Expect 9 to 11 hours a week, the heaviest first-year course by reputation.
+
+The one piece of advice: the unit tests come fast, roughly every three weeks; falling behind once is very hard to recover from.
+
 ```
 
 ## Sample Answer
