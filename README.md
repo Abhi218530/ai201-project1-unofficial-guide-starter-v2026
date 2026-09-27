@@ -21,16 +21,40 @@
 
 ## What This Does
 
-<!-- Three or four sentences. Which corpus you picked, and the kinds of
-     questions your system answers. Write it for someone who has never seen
-     this repo.
+The Unofficial Guide answers questions about student life using the
+campus_life corpus — 88 short posts covering dining halls, housing, courses,
+and admin deadlines. Ask something like "how much does laundry cost in
+Fenwick Court?" or "is the housing lottery actually random?" and it retrieves
+the most relevant posts, checks whether they're close enough to trust, and
+generates an answer that names its sources. If nothing in the corpus is
+relevant — tax filing, the weather in Antarctica — it says so instead of
+guessing.
 
-     Milestone 5. -->
 
 ## Chunking Strategy
 
-**Chunk size:**
-**Overlap:**
+
+**Chunk size:** 800 characters (unchanged from the starter default)
+**Overlap:** 120 characters (unchanged from the starter default)
+
+I kept the starter's numbers rather than changing them, because after reading
+several documents in Milestone 1 (admin_dining_dollars, course_cs_210,
+dining_kestrel_commons, housing_fenwick_court) I found every post in this
+corpus is well under 800 characters on its own — the longest chunk I produced
+was 549 characters. Chunk size wasn't the actual constraint here; paragraph
+structure was. So instead of changing the number, I changed the *strategy*:
+I replaced the fixed-character-window fallback with a paragraph-aware
+chunker that keeps a whole post as one chunk when it fits, and only splits
+on paragraph boundaries (and sentence-packs within an oversized paragraph)
+if a post is genuinely too long. On this corpus that produces the same
+88 documents → 88 chunks result as the fallback, which makes sense — the
+difference would show up on a corpus with longer documents, not this one.
+
+I also noticed while reading that popular topics (CS 210, Fenwick Court)
+have their facts repeated across 2-3 separate posts, sometimes word-for-word.
+That's not a chunking problem to fix — it's just how this corpus is written
+— but it does mean retrieval often correctly pulls back multiple chunks that
+confirm the same fact rather than one chunk from one canonical source.
 
 <!-- What about YOUR documents made you pick these numbers? Short posts and
      long sectioned guides don't want the same chunking, and "800 seemed
@@ -53,28 +77,23 @@
 
      Milestone 3. -->
 
-**Chunk 1** — source: `` — produced by: ``
-
+**Chunk 1** — source: `admin_add_drop_deadline.txt#0` — produced by: `chunker.py::split_documents`
 ```
 ```
 
-**Chunk 2** — source: `` — produced by: ``
-
+**Chunk 2** — source: `course_biol_160.txt#0` — produced by: `chunker.py::split_documents`
 ```
 ```
 
-**Chunk 3** — source: `` — produced by: ``
-
+**Chunk 3** — source: `course_hist_118_workload.txt#0` — produced by: `chunker.py::split_documents`
 ```
 ```
 
-**Chunk 4** — source: `` — produced by: ``
-
+**Chunk 4** — source: `dining_pellew_dining_hall_followup.txt#0` — produced by: `chunker.py::split_documents`
 ```
 ```
 
-**Chunk 5** — source: `` — produced by: ``
-
+**Chunk 5** — source: `housing_innisfree_hall.txt#0` — produced by: `chunker.py::split_documents`
 ```
 ```
 
@@ -82,8 +101,7 @@
 
 <!-- One complete question and answer, pasted as text, with the source line
      visible. Milestone 4. -->
-
-**Question:**
+**Question:** How much does laundry cost in Fenwick Court?
 
 **Answer:**
 
@@ -132,9 +150,25 @@ now blocks it before any model call ("0 model calls this session").
 
      Milestone 5. -->
 
-**1.**
+**1.** I asked Claude to write a replacement chunker for Milestone 3, after
+describing what I'd found reading campus_life documents — short, mostly
+single-paragraph posts, with popular topics like CS 210 or Fenwick Court
+split across 2-3 related files. Claude proposed paragraph-aware chunking
+with a sentence-packing fallback for oversized paragraphs. I pasted it in
+and verified it against real data by running `python app.py index` — it
+produced the same 88 documents → 88 chunks as the original fallback, which
+made sense once I understood every post here is already under 800
+characters. The strategy changed; the count on this particular corpus
+didn't, and I had to actually run it to know that rather than assume it.
 
-**2.**
+**2.** For Milestone 4, I ran my 5 in-scope and 5 out-of-scope questions
+myself and shared the resulting distances with Claude. It pointed out that
+my initial THRESHOLD of 0.6 was riskily close to my worst out-of-scope case
+(0.574, the Antarctica question) — technically inside the gap but with
+almost no margin. I changed THRESHOLD to 0.4 based on that, then re-ran the
+Antarctica question myself to confirm the gate blocked it before any model
+call ("0 model calls this session"), rather than just trusting the
+suggested number.
 
 <!-- ── Stretch features ─────────────────────────────────────────────────────
      Doing one? Say so here BEFORE you start. A feature this README never
