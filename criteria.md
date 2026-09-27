@@ -70,6 +70,13 @@ in at least 4 of 5 tries.
           in my corpus turned out to be a heading with no content under it." -->
 
 
+For at least 4 of my 5 test questions, the retrieved chunk with the
+lowest distance is under 0.35 — meaning the closest match isn't just
+"in scope" but genuinely tight, not a loose word-overlap guess.
+Reason: this corpus has short, single-fact posts, so a well-matched
+chunk should score very close, not just barely under the cutoff.
+
+
 
 **Why this target:**
 
@@ -86,7 +93,13 @@ in at least 4 of 5 tries.
      handles badly, about source attribution being correct rather than merely
      present — anything, as long as it names a number or an observable
      outcome. -->
-
+When a topic has multiple posts (like CS 210 or Fenwick Court, which
+each have 2-3 posts covering overlapping info), the answer's cited
+sources include more than one of them in at least 2 of my 5 test
+questions that touch those topics.
+Reason: I noticed while reading the corpus that popular topics get
+restated across several posts — a good retrieval system should surface
+that redundancy, not just grab the first match and stop.
 
 
 **Why this target:**
