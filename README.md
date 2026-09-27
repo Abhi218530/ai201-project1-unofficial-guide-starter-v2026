@@ -92,18 +92,34 @@
 
 **My relevance cutoff:**
 
-<!-- The number you set in config.py, and how you got there.
+I ran my 5 in-scope test questions and the 5 OUT_OF_SCOPE questions and recorded
+the best (lowest) distance for each. The in-scope group topped out at 0.282;
+the out-of-scope group bottomed out at 0.574 — a clean gap with no overlap.
 
-     You ran five questions your corpus covers and the five in OUT_OF_SCOPE
-     that it clearly doesn't, and wrote down the best distance for each. What
-     did those two groups look like? Where was the gap? Put the actual numbers
-     here — the table below wants all ten rows.
+The starter's default THRESHOLD of 0.6 technically sits inside that gap, but
+right on the edge of the out-of-scope side. My "Antarctica" question scored
+0.574 — just under 0.6 — meaning it would have passed the gate and relied on
+the model to decline in the prompt rather than being stopped outright. That's
+exactly the failure mode Milestone 4 warns about: hoping the model declines
+instead of deciding in code.
 
-     Milestone 4. -->
+I set THRESHOLD = 0.4, which sits roughly in the middle of the gap — well
+above my worst in-scope case (0.282) and well below my best out-of-scope
+case (0.574). Re-running the Antarctica question at 0.4 confirmed the gate
+now blocks it before any model call ("0 model calls this session").
 
 | Question | In corpus? | Best distance |
 |---|---|---|
-|  |  |  |
+| How much does laundry cost in Fenwick Court? | Yes | 0.197 |
+| Is the housing lottery actually random? | Yes | 0.248 |
+| What are the wait times at Kestrel Commons? | Yes | 0.223 |
+| Do dining dollars roll over to the next year? | Yes | 0.233 |
+| What's the workload like for CS 210? | Yes | 0.282 |
+| What's the weather like in Antarctica? | No | 0.574 |
+| How do I file my taxes as an international student? | No | 0.670 |
+| What's the best recipe for chocolate chip cookies? | No | 0.886 |
+| Who won the World Cup in 2022? | No | 0.850 |
+| How do I change a flat tire? | No | 0.837 |
 
 ## How I Used AI
 
